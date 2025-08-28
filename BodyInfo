@@ -1,0 +1,12 @@
+package com.example.model;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class BodyInfo {
+    public List<VariableInfo> localVariables;
+    public List<StatementInfo> statements;
+    public List<CallInfo> calls;
+    public List<SqlQueryInfo> sqlQueries;
+}
