@@ -1,0 +1,12 @@
+package com.example.model;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class StatementInfo {
+    public String type;
+    public String condition;
+    public String body;
+    public String tryBlock;
+    public String catchBlock;
+}
