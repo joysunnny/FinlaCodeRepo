@@ -1,0 +1,14 @@
+package com.example.model;
+
+public class FieldInfo {
+    public String name;
+    public String type;
+    public String modifier;
+
+    // Optional: Add a constructor for easy object creation
+    // public FieldInfo(String name, String type, String modifier) {
+    //     this.name = name;
+    //     this.type = type;
+    //     this.modifier = modifier;
+    // }
+}
