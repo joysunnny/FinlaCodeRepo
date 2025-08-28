@@ -1,0 +1,6 @@
+package com.example.model;
+
+public class CallInfo {
+    public String targetClassName;
+    public String targetMethodName;
+}
