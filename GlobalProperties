@@ -1,0 +1,12 @@
+class GlobalProperties {
+    public List<FieldInfo> publicStaticFields;
+
+    public GlobalProperties() {
+        this.publicStaticFields = new ArrayList<>();
+    }
+
+    public void addPublicStaticField(FieldInfo field) {
+        if (field != null) {
+            this.publicStaticFields.add(field);
+        }
+    }
