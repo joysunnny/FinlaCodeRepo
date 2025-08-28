@@ -1,0 +1,69 @@
+package com.example.util;
+
+import com.example.model.SqlQueryInfo;
+import com.github.jsqlparser.JSQLParserException;
+import com.github.jsqlparser.parser.CCJSqlParserUtil;
+import com.github.jsqlparser.statement.Statement;
+import com.github.jsqlparser.statement.select.PlainSelect;
+import com.github.jsqlparser.statement.select.Select;
+import com.github.jsqlparser.util.TablesNamesFinder;
+import spoon.reflect.code.CtLiteral;
+import spoon.reflect.declaration.CtAnnotation;
+import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.visitor.filter.TypeFilter;
+import java.util.ArrayList;
+import java.util.List;
+
+public class SQLHelper {
+
+    private static final List<String> SQL_KEYWORDS = List.of("SELECT", "INSERT", "UPDATE", "DELETE", "FROM", "INTO");
+
+    public static List<SqlQueryInfo> extractSqlFromMethod(CtMethod<?> method) {
+        List<SqlQueryInfo> queries = new ArrayList<>();
+        
+        // 1. Find SQL in string literals
+        List<CtLiteral<String>> literals = method.getElements(new TypeFilter<>(CtLiteral.class));
+        for (CtLiteral<String> literal : literals) {
+            if (literal.getValue() != null && SQL_KEYWORDS.stream().anyMatch(literal.getValue().toUpperCase()::contains)) {
+                queries.add(parseSql(literal.getValue()));
+            }
+        }
+
+        // 2. Find SQL in @Query annotations (Spring Data JPA)
+        List<CtAnnotation<?>> annotations = method.getAnnotations();
+        for (CtAnnotation<?> annotation : annotations) {
+            if (annotation.getAnnotationType().getSimpleName().equals("Query")) {
+                Object value = annotation.getValue("value");
+                if (value instanceof CtLiteral) {
+                    queries.add(parseSql(((CtLiteral<String>) value).getValue()));
+                }
+            }
+        }
+
+        return queries;
+    }
+
+    public static SqlQueryInfo parseSql(String sqlStr) {
+        SqlQueryInfo sqlInfo = new SqlQueryInfo();
+        sqlInfo.query = sqlStr;
+        try {
+            Statement statement = CCJSqlParserUtil.parse(sqlStr);
+            TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
+            sqlInfo.tables = tablesNamesFinder.getTableList(statement);
+            
+            if (statement instanceof Select) {
+                PlainSelect select = (PlainSelect) ((Select) statement).getSelectBody();
+                if (select.getSelectItems() != null) {
+                    sqlInfo.columns = new ArrayList<>();
+                    select.getSelectItems().forEach(item -> sqlInfo.columns.add(item.toString()));
+                }
+                if (select.getWhere() != null) {
+                    sqlInfo.conditions = select.getWhere().toString();
+                }
+            }
+        } catch (JSQLParserException e) {
+            System.err.println("Failed to parse SQL: " + sqlStr);
+        }
+        return sqlInfo;
+    }
+}
