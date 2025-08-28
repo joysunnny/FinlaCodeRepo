@@ -1,0 +1,63 @@
+package com.example;
+
+import com.example.model.AnalysisReport;
+import com.example.model.ClassInfo;
+import com.example.model.GlobalProperties;
+import com.example.model.PropertyQueryInfo;
+import com.example.processor.CodeAnalyzerProcessor;
+import com.example.util.PropertiesReader;
+import com.example.util.SQLHelper;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import spoon.Launcher;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
+public class SpringBootCodeAnalyzer {
+
+    public static void main(String[] args) throws IOException {
+        String sourcePath = "src/main/java";
+        String propertiesPath = "src/main/resources/application.properties";
+
+        // Step 1: Run Spoon Analysis
+        Launcher launcher = new Launcher();
+        launcher.addInputResource(sourcePath);
+        CodeAnalyzerProcessor processor = new CodeAnalyzerProcessor();
+        launcher.addProcessor(processor);
+        launcher.run();
+
+        // Step 2: Read Properties and Extract SQL
+        List<PropertyQueryInfo> propertyQueries = new ArrayList<>();
+        try {
+            Properties properties = PropertiesReader.read(propertiesPath);
+            for (String key : properties.stringPropertyNames()) {
+                String value = properties.getProperty(key);
+                if (SQLHelper.isSql(value)) {
+                    PropertyQueryInfo propInfo = new PropertyQueryInfo();
+                    propInfo.name = key;
+                    propInfo.queryInfo = SQLHelper.parseSql(value);
+                    propertyQueries.add(propInfo);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Could not read properties file: " + e.getMessage());
+        }
+
+        // Step 3: Assemble Final Report
+        AnalysisReport report = new AnalysisReport();
+        report.projectName = "Spring-Order-Management";
+        report.classes = processor.getClassesInfo();
+        report.globalProperties = new GlobalProperties();
+        report.globalProperties.sqlQueries = propertyQueries;
+
+        // Step 4: Generate JSON Output
+        ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+        File outputFile = new File("analysis_report.json");
+        mapper.writeValue(outputFile, report);
+
+        System.out.println("Analysis report generated successfully at: " + outputFile.getAbsolutePath());
+    }
+}
