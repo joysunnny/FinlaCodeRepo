@@ -1,0 +1,12 @@
+package com.example.model;
+
+public class ParameterInfo {
+    public String name;
+    public String type;
+
+    // Optional: You can add a constructor for convenience, though not strictly required
+    // public ParameterInfo(String name, String type) {
+    //     this.name = name;
+    //     this.type = type;
+    // }
+}
