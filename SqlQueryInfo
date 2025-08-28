@@ -1,0 +1,12 @@
+package com.example.model;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class SqlQueryInfo {
+    public String query;
+    public List<String> tables;
+    public List<String> columns;
+    public String conditions;
+}
