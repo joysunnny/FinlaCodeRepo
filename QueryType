@@ -1,0 +1,4 @@
+enum QueryType {
+    READ,   // A read operation (e.g., getting the value of a field).
+    WRITE   // A write operation (e.g., setting the value of a field).
+}
