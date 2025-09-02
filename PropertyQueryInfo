@@ -1,0 +1,12 @@
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class PropertyQueryInfo {
+    public String propertyName;
+    public QueryType queryType;
+    public LocationInfo location;
+    
+    public PropertyQueryInfo(String propertyName, QueryType queryType, LocationInfo location) {
+        this.propertyName = propertyName;
+        this.queryType = queryType;
+        this.location = location;
+    }
+}
