@@ -1,0 +1,93 @@
+public class CodeAnalyzerProcessor {
+
+    /**
+     * Analyzes a given Java code snippet and generates an AnalysisReport.
+     * This method simulates the process of code analysis by looking for keywords.
+     *
+     * @param code The Java code snippet as a String.
+     * @return A populated AnalysisReport object.
+     */
+    public AnalysisReport analyze(String code) {
+        // Initialize the report, which contains the other model objects
+        AnalysisReport report = new AnalysisReport();
+        report.projectName = "ExampleProject";
+
+        // This is a placeholder for a real parsing process
+        String[] lines = code.split("\n");
+        ClassInfo currentClass = null;
+
+        for (String line : lines) {
+            line = line.trim();
+
+            // Simplified detection of a class definition
+            if (line.contains("class") && !line.contains(";") && !line.contains("{")) {
+                String className = extractWordAfterKeyword(line, "class");
+                if (className != null) {
+                    currentClass = new ClassInfo(className);
+                    report.classes.add(currentClass);
+                }
+            }
+            
+            // Simplified detection of a field within a class
+            // This is a very basic check, and a real parser would be more robust.
+            if (currentClass != null && !line.startsWith("public") && line.contains(";")) {
+                 String[] parts = line.split("\\s+");
+                 if (parts.length >= 2) {
+                     String type = parts[parts.length - 2];
+                     String name = parts[parts.length - 1].replace(";", "");
+                     currentClass.fields.add(new FieldInfo(name, type, new ArrayList<>(), false));
+                 }
+            }
+
+            // Simplified detection of a public static field (a global-like variable)
+            if (line.contains("public static") && line.contains(";")) {
+                String[] parts = line.split("\\s+");
+                if (parts.length >= 3) {
+                    String type = parts[parts.length - 2];
+                    String name = parts[parts.length - 1].replace(";", "");
+                    List<String> modifiers = new ArrayList<>();
+                    modifiers.add("public");
+                    modifiers.add("static");
+
+                    FieldInfo staticField = new FieldInfo(name, type, modifiers, true);
+                    report.globalProperties.addPublicStaticField(staticField);
+                    
+                    // Also add the field to the current class's field list
+                    if (currentClass != null) {
+                         currentClass.fields.add(staticField);
+                    }
+                }
+            }
+        }
+
+        return report;
+    }
+
+    /**
+     * A helper method to extract a word that follows a specific keyword.
+     * @param line The string line to search.
+     * @param keyword The keyword to look for.
+     * @return The word following the keyword, or null if not found.
+     */
+    private String extractWordAfterKeyword(String line, String keyword) {
+        int index = line.indexOf(keyword);
+        if (index != -1) {
+            String remainder = line.substring(index + keyword.length()).trim();
+            int spaceIndex = remainder.indexOf(" ");
+            int bracketIndex = remainder.indexOf("{");
+            int endIndex = -1;
+
+            if (spaceIndex != -1 && bracketIndex != -1) {
+                endIndex = Math.min(spaceIndex, bracketIndex);
+            } else if (spaceIndex != -1) {
+                endIndex = spaceIndex;
+            } else if (bracketIndex != -1) {
+                endIndex = bracketIndex;
+            } else {
+                return remainder;
+            }
+            return remainder.substring(0, endIndex);
+        }
+        return null;
+    }
+}
